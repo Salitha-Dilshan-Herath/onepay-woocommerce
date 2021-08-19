@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce Onepay Payment Gateway
 Plugin URI: https://www.onepay.lk
-Description: Onepay Payment Gateway allows you to accept payment on your Woocommerce store via Visa, MasterCard, AMEX, & Lanka QR services.
+Description: Onepay Payment Gateway allows you to accept payment on your Woocommerce store via Visa, MasterCard, AMEX, LankaQR.
 Version: 1.0.0
 Author: Onepay (Private) Limited
 Author URI: https://www.onepay.lk
