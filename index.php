@@ -1,11 +1,12 @@
 <?php
 /*
-Plugin Name: WooCommerce Onepay Payment Gateway
-Plugin URI: https://www.onepay.lk
-Description: Onepay Payment Gateway allows you to accept payment on your Woocommerce store via Visa, MasterCard, AMEX, LankaQR.
+Plugin Name: onepay Payment Gateway For WooCommerce
+Plugin URI: https://github.com/onepay-srilanka/onepay-woocommerce
+Description: onepay Payment Gateway allows you to accept payment on your Woocommerce store via Visa, MasterCard, AMEX, & Lanka QR services.
 Version: 1.0.0
-Author: Onepay (Private) Limited
+Author: onepay
 Author URI: https://www.onepay.lk
+License: GPLv3
 */
 
 add_action('plugins_loaded', 'woocommerce_gateway_onepay_init', 0);
@@ -33,7 +34,7 @@ function woocommerce_gateway_onepay_init() {
 			$this->init_form_fields();	// defines your settings to WC
 			$this->init_settings();		// loads the Gateway settings into variables for WC
 						
-            $this->liveurl 			= 'https://merchant-api-development.onepay.lk/api/ipg/gateway/request-transaction/';
+			$this->liveurl 			= 'https://merchant-api-live-v2.onepay.lk/api/ipg/gateway/request-transaction/';
 			// Special settigns if gateway is on Test Mode
 			$test_title			= '';	
 			$test_description	= '';
@@ -41,14 +42,12 @@ function woocommerce_gateway_onepay_init() {
 
 			$this->title 			= $this->settings['title'].$test_title; // Title as displayed on Frontend
 			$this->description 		= $this->settings['description'].$test_description; // Description as displayed on Frontend
-			if ( $this->settings['show_logo'] != "no" ) { // Check if Show-Logo has been allowed
-				$this->icon 		= onepay_IMG . 'logo_onepay' . $this->settings['show_logo'] . '.png';
-			}
+
 			$this->salt_string 		= $this->settings['salt_string'];
 			$this->app_id 		= $this->settings['app_id'];
             $this->auth_token 		    = $this->settings['auth_token'];
 			$this->redirect_page	= $this->settings['redirect_page']; // Define the Redirect Page.
-			$this->service_provider	= $this->settings['service_provider']; // The Service options for Onepay.
+
 			
             $this->msg['message']	= '';
             $this->msg['class'] 	= '';
@@ -90,14 +89,8 @@ function woocommerce_gateway_onepay_init() {
       			'description' => array(
 					'title' 			=> __('Description:', 'woo_onepay'),
 					'type' 			=> 'textarea',
-					'default' 		=> __('Pay by Visa, MasterCard, AMEX, or Lanka QR via onepay.', 'woo_onepay'),
+					'default' 		=> __(' Pay by Visa, MasterCard, AMEX, or Lanka QR via onepay.', 'woo_onepay'),
 					'description' 	=> __('This controls the description which the user sees during checkout.', 'woo_onepay'),
-					'desc_tip' 		=> true
-				),
-				'salt_string' => array(
-					'title' 		=> __('Salt String', 'woo_onepay'),
-					'type' 			=> 'text',
-					'description' 	=> __('Your onepay Salt String'),
 					'desc_tip' 		=> true
 				),
 				// LIVE App ID
@@ -109,9 +102,15 @@ function woocommerce_gateway_onepay_init() {
 				),
 				// LIVE App ID
 				'auth_token' => array(
-					'title' 		=> __('Auth Token', 'woo_onepay'),
+					'title' 		=> __('App Token', 'woo_onepay'),
 					'type' 			=> 'text',
-					'description' 	=> __('Your onepay Auth token'),
+					'description' 	=> __('Your onepay App token'),
+					'desc_tip' 		=> true
+				),
+				'salt_string' => array(
+					'title' 		=> __('Hash Salt', 'woo_onepay'),
+					'type' 			=> 'text',
+					'description' 	=> __('Your onepay Hash Salt String'),
 					'desc_tip' 		=> true
 				),
   				// Page for Redirecting after Transaction
@@ -250,6 +249,7 @@ function woocommerce_gateway_onepay_init() {
 						}else{
 							alert("Phone number is incorrect. It should start with +94 and have a length of 12");
 						}
+					
 
 						
 				
@@ -343,7 +343,7 @@ function woocommerce_gateway_onepay_init() {
 									$this->msg['message'] = "Thank you for shopping with us. Your account has been charged and your transaction is successful.";
 									$this->msg['class'] = 'woocommerce-message';
 									if($order->status == 'processing'){
-										$order->add_order_note('Onepay transaction ID: '.$_REQUEST['onepay_transaction_id']);
+										$order->add_order_note('onepay transaction ID: '.$_REQUEST['onepay_transaction_id']);
 									}else{
 										$order->payment_complete();
 										$order->add_order_note('onepay payment successful.<br/>onepay transaction ID: '.$_REQUEST['onepay_transaction_id']);
@@ -379,7 +379,6 @@ function woocommerce_gateway_onepay_init() {
 	
 			}
 			if ( $this->redirect_page == '' || $this->redirect_page == 0 ) {
-				//$redirect_url = $order->get_checkout_payment_url( true );
 				$redirect_url = get_permalink( get_option('woocommerce_myaccount_page_id') );
 			} else {
 				$redirect_url = get_permalink( $this->redirect_page );
