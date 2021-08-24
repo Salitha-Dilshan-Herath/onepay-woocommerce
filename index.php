@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: WooCommerce onepay Payment Gateway
+Plugin Name: onepay Payment Gateway For WooCommerce
 Plugin URI: https://github.com/onepay-srilanka/onepay-woocommerce
 Description: onepay Payment Gateway allows you to accept payment on your Woocommerce store via Visa, MasterCard, AMEX, & Lanka QR services.
 Version: 1.0.0
