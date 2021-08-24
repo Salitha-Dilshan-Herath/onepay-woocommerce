@@ -6,7 +6,7 @@ Description: onepay Payment Gateway allows you to accept payment on your Woocomm
 Version: 1.0.0
 Author: onepay
 Author URI: https://www.onepay.lk
-License: GPLv3 or later
+License: GPLv3
 */
 
 add_action('plugins_loaded', 'woocommerce_gateway_onepay_init', 0);
