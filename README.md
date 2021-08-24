@@ -12,7 +12,7 @@
 
 **Author URI:** https://www.onepay.lk
 
-**License:** Under GPL3
+**License:** GPLv3
 
 
 ## onepay-payment-for-woocommerce
