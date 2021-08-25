@@ -6,7 +6,8 @@ Description: onepay Payment Gateway allows you to accept payment on your Woocomm
 Version: 1.0.0
 Author: onepay
 Author URI: https://www.onepay.lk
-License: GPLv3
+License: GPLv3 or later
+WC tested up to: 5.8
 */
 
 add_action('plugins_loaded', 'woocommerce_gateway_onepay_init', 0);
@@ -71,44 +72,44 @@ function woocommerce_gateway_onepay_init() {
 			$this->form_fields = array(
 				// Activate the Gateway
 				'enabled' => array(
-					'title' 			=> __('Enable/Disable', 'woo_onepay'),
+					'title' 			=> __('Enable/Disable', 'onepayipg'),
 					'type' 			=> 'checkbox',
-					'label' 			=> __('Enable onepay', 'woo_onepay'),
+					'label' 			=> __('Enable onepay', 'onepayipg'),
 					'default' 		=> 'yes',
 					'description' 	=> 'Show in the Payment List as a payment option'
 				),
 				// Title as displayed on Frontend
       			'title' => array(
-					'title' 			=> __('Title', 'woo_onepay'),
+					'title' 			=> __('Title', 'onepayipg'),
 					'type'			=> 'text',
-					'default' 		=> __('onepay', 'woo_onepay'),
-					'description' 	=> __('This controls the title which the user sees during checkout.', 'woo_onepay'),
+					'default' 		=> __('onepay', 'onepayipg'),
+					'description' 	=> __('This controls the title which the user sees during checkout.', 'onepayipg'),
 					'desc_tip' 		=> true
 				),
 				// Description as displayed on Frontend
       			'description' => array(
-					'title' 			=> __('Description:', 'woo_onepay'),
+					'title' 			=> __('Description:', 'onepayipg'),
 					'type' 			=> 'textarea',
-					'default' 		=> __(' Pay by Visa, MasterCard, AMEX, or Lanka QR via onepay.', 'woo_onepay'),
-					'description' 	=> __('This controls the description which the user sees during checkout.', 'woo_onepay'),
+					'default' 		=> __(' Pay by Visa, MasterCard, AMEX, or Lanka QR via onepay.', 'onepayipg'),
+					'description' 	=> __('This controls the description which the user sees during checkout.', 'onepayipg'),
 					'desc_tip' 		=> true
 				),
 				// LIVE App ID
 				'app_id' => array(
-					'title' 		=> __('App ID', 'woo_onepay'),
+					'title' 		=> __('App ID', 'onepayipg'),
 					'type' 			=> 'text',
 					'description' 	=> __('Your onepay App ID'),
 					'desc_tip' 		=> true
 				),
 				// LIVE App ID
 				'auth_token' => array(
-					'title' 		=> __('App Token', 'woo_onepay'),
+					'title' 		=> __('App Token', 'onepayipg'),
 					'type' 			=> 'text',
 					'description' 	=> __('Your onepay App token'),
 					'desc_tip' 		=> true
 				),
 				'salt_string' => array(
-					'title' 		=> __('Hash Salt', 'woo_onepay'),
+					'title' 		=> __('Hash Salt', 'onepayipg'),
 					'type' 			=> 'text',
 					'description' 	=> __('Your onepay Hash Salt String'),
 					'desc_tip' 		=> true
@@ -118,7 +119,7 @@ function woocommerce_gateway_onepay_init() {
 					'title' 			=> __('Return Page'),
 					'type' 			=> 'select',
 					'options' 		=> $this->onepay_get_pages('Select Page'),
-					'description' 	=> __('Page to redirect the customer after payment', 'woo_onepay'),
+					'description' 	=> __('Page to redirect the customer after payment', 'onepayipg'),
 					'desc_tip' 		=> true
                 )
 			);
@@ -130,8 +131,8 @@ function woocommerce_gateway_onepay_init() {
          * - Show info on Admin Backend
          **/
 		public function admin_options(){
-			echo '<h3>'.__('onepay', 'woo_onepay').'</h3>';
-			echo '<p>'.__('WooCommerce Payment Plugin of onepay Payment Gateway, The Digital Payment Service Provider of Sri Lanka').'</p>';
+			echo '<h3>'.esc_html__('onepay', 'onepayipg').'</h3>';
+			echo '<p>'.esc_html__('WooCommerce Payment Plugin of onepay Payment Gateway, The Digital Payment Service Provider of Sri Lanka').'</p>';
 			echo '<div style="background-color: #ffd5ba;color: #a04701;padding: 5px 20px">';
 			echo '<h4><span class="dashicons dashicons-warning"></span>Important!!</h4>';
 			echo '<p>If you want to enable sandbox create a development app in onepay merchant portal.</p>';
@@ -155,7 +156,7 @@ function woocommerce_gateway_onepay_init() {
          * Receipt Page
          **/
 		function receipt_page($order){
-			echo '<p><strong>' . __('Thank you for your order.', 'woo_onepay').'</strong><br/>' . __('The payment page will open soon.', 'onepay').'</p>';
+			echo '<p><strong>' . esc_html__('Thank you for your order.', 'onepayipg').'</strong><br/>' . esc_html__('The payment page will open soon.', 'onepay').'</p>';
 			echo $this->generate_onepay_form($order);
 		} //END-receipt_page
     
@@ -186,31 +187,31 @@ function woocommerce_gateway_onepay_init() {
 			
 
 			$onepay_args = array(
-				'transaction_redirect_url' => $redirect_url,
-                'customer_first_name' => $order -> billing_first_name,
-                'customer_last_name' => $order -> billing_last_name,
-                'customer_email' => $order -> billing_email,
-                'customer_phone_number' => $order -> billing_phone,
+				'transaction_redirect_url' => esc_url_raw($redirect_url),
+                'customer_first_name' => $order -> get_billing_first_name(),
+                'customer_last_name' => $order -> get_billing_last_name(),
+                'customer_email' => sanitize_email($order -> get_billing_email()),
+                'customer_phone_number' => $order -> get_billing_phone(),
                 'reference' => $order_id,
-                'amount' => floatval($order -> order_total),
-				'app_id' => $this->app_id,
+                'amount' => floatval($order -> get_total()),
+				'app_id' => sanitize_text_field($this->app_id),
 				'is_sdk' => 1,
 				'sdk_type' => "woocommerce",
-				'authorization' => $this->auth_token
+				'authorization' => sanitize_text_field($this->auth_token)
 			);
 
 			$hash_args = array(
-				'transaction_redirect_url' => $redirect_url,
-                'customer_first_name' => $order -> billing_first_name,
-                'customer_last_name' => $order -> billing_last_name,
-                'customer_email' => $order -> billing_email,
-                'customer_phone_number' => $order -> billing_phone,
+				'transaction_redirect_url' => esc_url_raw($redirect_url),
+                'customer_first_name' => $order -> get_billing_first_name(),
+                'customer_last_name' => $order -> get_billing_last_name(),
+                'customer_email' => sanitize_email($order -> get_billing_email()),
+                'customer_phone_number' => $order -> get_billing_phone(),
                 'reference' => strval($order_id),
-                'amount' => strval(floatval($order -> order_total)),
-				'app_id' => $this->app_id,
+                'amount' => strval(floatval($order -> get_total())),
+				'app_id' => sanitize_text_field($this->app_id),
 				'is_sdk' => "1",
 				'sdk_type' => "woocommerce",
-				'authorization' => $this->auth_token
+				'authorization' => sanitize_text_field($this->auth_token)
 			);
 			$result_body = json_encode($hash_args,JSON_UNESCAPED_SLASHES);
 
@@ -237,7 +238,7 @@ function woocommerce_gateway_onepay_init() {
 
 			return '	<form action="'.$this->liveurl.'" method="post" id="onepay_payment_form">
   				' . implode('', $onepay_args_array) . '
-				<input type="submit" class="button-alt" id="submit_onepay_payment_form" value="'.__('Pay via onepay', 'woo_onepay').'" /> <a class="button cancel" href="'.$order->get_cancel_order_url().'">'.__('Cancel order &amp; restore cart', 'woo_onepay').'</a>
+				<input type="submit" class="button-alt" id="submit_onepay_payment_form" value="'.__('Pay via onepay', 'onepayipg').'" /> <a class="button cancel" href="'.$order->get_cancel_order_url().'">'.__('Cancel order &amp; restore cart', 'onepayipg').'</a>
 					<script type="text/javascript">
 					jQuery(function(){
 
@@ -297,7 +298,7 @@ function woocommerce_gateway_onepay_init() {
 
 		   global $woocommerce;
 
-		   echo '<p><strong>' . __('Thank you for your order.', 'woo_onepay').'</strong><br/>' . __('You will be redirected soon....', 'onepay').'</p>';
+		   echo '<p><strong>' . esc_html__('Thank you for your order.', 'onepayipg').'</strong><br/>' . esc_html__('You will be redirected soon....', 'onepay').'</p>';
 	
 
 			if( isset($_REQUEST['merchant_transaction_id']) && isset($_REQUEST['hash']) && isset($_REQUEST['onepay_transaction_id']) ){
@@ -320,16 +321,16 @@ function woocommerce_gateway_onepay_init() {
 
 
 							$json_string=json_encode($request_args);
-							echo $json_string;
+				
 
 
 							$json_hash_result = hash('sha256',$json_string);
-							echo $json_hash_result;
+					
 
 
                             if (($_REQUEST['hash'] != $json_hash_result)) {
 								$verified = false;
-								echo "failed";
+							
                             }
                         } 
 						
