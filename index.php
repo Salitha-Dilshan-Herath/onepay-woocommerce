@@ -36,13 +36,11 @@ function woocommerce_gateway_onepay_init() {
 			$this->init_settings();		// loads the Gateway settings into variables for WC
 						
 			$this->liveurl 			= 'https://merchant-api-live-v2.onepay.lk/api/ipg/gateway/request-transaction/';
-			// Special settigns if gateway is on Test Mode
-			$test_title			= '';	
-			$test_description	= '';
 
 
-			$this->title 			= $this->settings['title'].$test_title; // Title as displayed on Frontend
-			$this->description 		= $this->settings['description'].$test_description; // Description as displayed on Frontend
+
+			$this->title 			= $this->settings['title']; // Title as displayed on Frontend
+			$this->description 		= $this->settings['description']; // Description as displayed on Frontend
 
 			$this->salt_string 		= $this->settings['salt_string'];
 			$this->app_id 		= $this->settings['app_id'];
@@ -188,11 +186,11 @@ function woocommerce_gateway_onepay_init() {
 
 			$onepay_args = array(
 				'transaction_redirect_url' => esc_url_raw($redirect_url),
-                'customer_first_name' => $order -> get_billing_first_name(),
-                'customer_last_name' => $order -> get_billing_last_name(),
+                'customer_first_name' => sanitize_text_field($order -> get_billing_first_name()),
+                'customer_last_name' => sanitize_text_field($order -> get_billing_last_name()),
                 'customer_email' => sanitize_email($order -> get_billing_email()),
-                'customer_phone_number' => $order -> get_billing_phone(),
-                'reference' => $order_id,
+                'customer_phone_number' => sanitize_text_field($order -> get_billing_phone()),
+                'reference' => sanitize_text_field($order_id),
                 'amount' => floatval($order -> get_total()),
 				'app_id' => sanitize_text_field($this->app_id),
 				'is_sdk' => 1,
@@ -202,11 +200,11 @@ function woocommerce_gateway_onepay_init() {
 
 			$hash_args = array(
 				'transaction_redirect_url' => esc_url_raw($redirect_url),
-                'customer_first_name' => $order -> get_billing_first_name(),
-                'customer_last_name' => $order -> get_billing_last_name(),
+                'customer_first_name' => sanitize_text_field($order -> get_billing_first_name()),
+                'customer_last_name' => sanitize_text_field($order -> get_billing_last_name()),
                 'customer_email' => sanitize_email($order -> get_billing_email()),
-                'customer_phone_number' => $order -> get_billing_phone(),
-                'reference' => strval($order_id),
+                'customer_phone_number' => sanitize_text_field($order -> get_billing_phone()),
+                'reference' => sanitize_text_field(strval($order_id)),
                 'amount' => strval(floatval($order -> get_total())),
 				'app_id' => sanitize_text_field($this->app_id),
 				'is_sdk' => "1",
@@ -216,7 +214,7 @@ function woocommerce_gateway_onepay_init() {
 			$result_body = json_encode($hash_args,JSON_UNESCAPED_SLASHES);
 
 			$data=json_encode($hash_args,JSON_UNESCAPED_SLASHES);
-			$hash_salt=$this->salt_string;
+			$hash_salt=sanitize_text_field($this->salt_string);
 			$data .= $hash_salt;
 			$hash_result = hash('sha256',$data);
 
@@ -230,8 +228,13 @@ function woocommerce_gateway_onepay_init() {
 
 			$phone=$order->billing_phone;
 
-
-			$is_correct=preg_match('/^(?:\+94)?(?:(11|21|23|24|25|26|27|31|32|33|34|35|36|37|38|41|45|47|51|52|54|55|57|63|65|66|67|81|91)(0|2|3|4|5|7|9)|7(0|1|2|5|6|7|8)\d)\d{6}$/',$phone );
+			
+			// $is_correct=preg_match('/^[0-9]+$/',$phone );
+			if(sanitize_text_field($this->auth_token)=="" || sanitize_text_field($this->app_id)=="" || sanitize_text_field($this->salt_string)==""){
+				$is_correct=0;
+			}else{
+				$is_correct=1;
+			}
 
 			$this->liveurl .= "?hash=$hash_result";
 
@@ -248,7 +251,7 @@ function woocommerce_gateway_onepay_init() {
 							jQuery("#submit_onepay_payment_form").click();
 
 						}else{
-							alert("Phone number is incorrect. It should start with +94 and have a length of 12");
+							alert("Please add onepay payment configurations before proceeding");
 						}
 					
 
@@ -302,25 +305,27 @@ function woocommerce_gateway_onepay_init() {
 	
 
 			if( isset($_REQUEST['merchant_transaction_id']) && isset($_REQUEST['hash']) && isset($_REQUEST['onepay_transaction_id']) ){
-				$order_id = $_REQUEST['merchant_transaction_id'];
+				$order_id = sanitize_text_field($_REQUEST['merchant_transaction_id']);
 				if($order_id != ''){
 					try{
 						$order = new WC_Order( $order_id );
-						$status = (int)$_REQUEST['status'];
-						$hash_string = $_REQUEST['hash'];
+						$status = (int)sanitize_text_field($_REQUEST['status']);
+						$hash_string = sanitize_text_field($_REQUEST['hash']);
 					
+						$request_args = array(
+							'onepay_transaction_id' => sanitize_text_field($_REQUEST['onepay_transaction_id']),
+							'merchant_transaction_id' => sanitize_text_field($_REQUEST['merchant_transaction_id']),
+							'status' => $status
+						);
+
+
+						$json_string=json_encode($request_args);
+
                         
                         $verified = true;
-                        if ($_REQUEST['hash']) {
-
-							$request_args = array(
-								'onepay_transaction_id' => $_REQUEST['onepay_transaction_id'],
-								'merchant_transaction_id' => $_REQUEST['merchant_transaction_id'],
-								'status' => $status
-							);
+                        if ($hash_string) {
 
 
-							$json_string=json_encode($request_args);
 				
 
 
@@ -328,7 +333,7 @@ function woocommerce_gateway_onepay_init() {
 					
 
 
-                            if (($_REQUEST['hash'] != $json_hash_result)) {
+                            if (($hash_string != $json_hash_result)) {
 								$verified = false;
 							
                             }
@@ -344,17 +349,17 @@ function woocommerce_gateway_onepay_init() {
 									$this->msg['message'] = "Thank you for shopping with us. Your account has been charged and your transaction is successful.";
 									$this->msg['class'] = 'woocommerce-message';
 									if($order->status == 'processing'){
-										$order->add_order_note('onepay transaction ID: '.$_REQUEST['onepay_transaction_id']);
+										$order->add_order_note('onepay transaction ID: '.sanitize_text_field($_REQUEST['onepay_transaction_id']));
 									}else{
 										$order->payment_complete();
-										$order->add_order_note('onepay payment successful.<br/>onepay transaction ID: '.$_REQUEST['onepay_transaction_id']);
+										$order->add_order_note('onepay payment successful.<br/>onepay transaction ID: '.sanitize_text_field($_REQUEST['onepay_transaction_id']));
 										$woocommerce->cart->empty_cart();
 									}
 								}else if($status==0){
 									$trans_authorised = true;
 									$this->msg['class'] = 'woocommerce-error';
 									$this->msg['message'] = "Thank you for shopping with us. However, the transaction has been failed. We will keep you informed";
-									$order->add_order_note('Transaction ERROR.'.$_REQUEST['onepay_transaction_id']);
+									$order->add_order_note('Transaction ERROR.'.sanitize_text_field($_REQUEST['onepay_transaction_id']));
 									$order->update_status('on-hold');
 									$woocommerce -> cart -> empty_cart();
 								}
@@ -362,7 +367,7 @@ function woocommerce_gateway_onepay_init() {
 							}else{
 								$this->msg['class'] = 'error';
 								$this->msg['message'] = "Security Error. Illegal access detected.";
-								$order->add_order_note('Checksum ERROR: '.json_encode($_REQUEST));
+								$order->add_order_note('Checksum ERROR: '.json_encode($json_string));
 							}
 
 							if($trans_authorised==false){
@@ -384,11 +389,13 @@ function woocommerce_gateway_onepay_init() {
 			} else {
 				$redirect_url = get_permalink( $this->redirect_page );
 			}
+
 			
 			wp_redirect( $redirect_url );
 			exit;
 
-        } //END-check_onepay_response
+		} //END-check_onepay_response
+		
 
         /**
          * Get Page list from WordPress
