@@ -49,7 +49,9 @@ function woocommerce_gateway_onepay_init() {
 
 			
             $this->msg['message']	= '';
-            $this->msg['class'] 	= '';
+			$this->msg['class'] 	= '';
+			
+
 			
 			add_action('init', array(&$this, 'check_onepay_response'));
             add_action('woocommerce_api_' . strtolower(get_class($this)), array($this, 'check_onepay_response')); //update for woocommerce >2.0
@@ -146,16 +148,18 @@ function woocommerce_gateway_onepay_init() {
          **/
 		function payment_fields(){
 			if( $this->description ) {
-				echo wpautop( wptexturize( $this->description ) );
+				echo wpautop( wptexturize( esc_attr__($this->description) ) );
 			}
 		} //END-payment_fields
 		
         /**
          * Receipt Page
          **/
+
+
 		function receipt_page($order){
 			echo '<p><strong>' . esc_html__('Thank you for your order.', 'onepayipg').'</strong><br/>' . esc_html__('The payment page will open soon.', 'onepay').'</p>';
-			echo $this->generate_onepay_form($order);
+			echo wp_kses_normalize_entities($this->generate_onepay_form($order));
 		} //END-receipt_page
     
         /**
@@ -179,9 +183,7 @@ function woocommerce_gateway_onepay_init() {
 				$notify_url = add_query_arg( 'wc-api', get_class( $this ), $redirect_url );
 			}
 
-            $productinfo = "Order $order_id";
-
-			$txnid = $order_id.'_'.date("ymds");
+   
 			
 
 			$onepay_args = array(
@@ -384,14 +386,17 @@ function woocommerce_gateway_onepay_init() {
 
 	
 			}
-			if ( $this->redirect_page == '' || $this->redirect_page == 0 ) {
+			if ( ($this->redirect_page == '' || $this->redirect_page == 0) && isset($_REQUEST['merchant_transaction_id']) ) {
+				
+				$redirect_url=$this->get_return_url( $order );
+			} else if($this->redirect_page == '' || $this->redirect_page == 0) {
 				$redirect_url = get_permalink( get_option('woocommerce_myaccount_page_id') );
-			} else {
+			}else{
 				$redirect_url = get_permalink( $this->redirect_page );
 			}
 
 			
-			wp_redirect( $redirect_url );
+			wp_redirect( esc_url_raw($redirect_url) );
 			exit;
 
 		} //END-check_onepay_response
